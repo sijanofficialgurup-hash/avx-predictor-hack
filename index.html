@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVX OFFICIAL COMMUNITY</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .bg-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 1;
+        }
+
+        /* Password Overlay */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+
+        .auth-card {
+            background: #0f1420;
+            border: 1.5px solid #00ffcc;
+            border-radius: 16px;
+            padding: 20px;
+            width: 85%;
+            max-width: 290px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4);
+        }
+
+        .auth-card h3 {
+            color: #00ffcc;
+            margin-bottom: 12px;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .auth-card input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1.5px solid #00ffcc;
+            background: #080a0f;
+            color: #fff;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .auth-card button {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(90deg, #00ffcc, #00b377);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Main Menu Popup Panel */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .main-card {
+            background: rgba(18, 24, 38, 0.95);
+            width: 88%;
+            max-width: 320px;
+            padding: 18px 15px;
+            border-radius: 16px;
+            border: 1.5px solid #00ffcc;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4);
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .avatar-circle {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 10px auto;
+            border-radius: 50%;
+            border: 2px solid #00ffcc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
+            background: #0f172a;
+        }
+        .avatar-text {
+            font-size: 10px;
+            font-weight: bold;
+            color: #00ffcc;
+            line-height: 1.2;
+        }
+
+        .brand-title {
+            color: #38bdf8;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+        }
+
+        .system-tag {
+            display: inline-block;
+            background: rgba(0, 255, 204, 0.12);
+            color: #00ffcc;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid #00ffcc;
+            margin-bottom: 14px;
+            box-shadow: 0 0 8px rgba(0, 255, 204, 0.3);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .menu-btn {
+            background: rgba(15, 23, 42, 0.85);
+            color: #fff;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 1.5px solid #00ffcc;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.25);
+        }
+        .menu-btn.purple {
+            border-color: #a855f7;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+        }
+        .menu-btn:active {
+            transform: scale(0.96);
+        }
+
+        .footer-tag {
+            font-size: 10px;
+            color: #00ffcc;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 5px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            border: 1px solid rgba(0, 255, 204, 0.4);
+        }
+
+        /* --- ছোট সাইজের প্রেডিক্টর উইজেট --- */
+        .widget-container {
+            display: none;
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 235px; 
+            z-index: 200;
+            touch-action: none;
+        }
+
+        .wings-bg {
+            position: relative;
+            width: 100%;
+            background: rgba(10, 14, 23, 0.96);
+            backdrop-filter: blur(10px);
+            border: 1.2px solid #00ffcc;
+            border-radius: 10px;
+            padding: 6px 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 255, 170, 0.2);
+            padding-bottom: 3px;
+            margin-bottom: 4px;
+            cursor: move;
+        }
+
+        .title-text {
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+
+        .ping-box {
+            background: rgba(0, 255, 170, 0.15);
+            border: 1px solid #00ffcc;
+            border-radius: 8px;
+            padding: 1px 4px;
+            font-size: 8px;
+            color: #00ffcc;
+            font-weight: bold;
+        }
+
+        .sync-badge {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: #fff;
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .period-box {
+            background: #080b12;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            padding: 3px 5px;
+            font-size: 9px;
+            color: #cbd5e1;
+            text-align: center;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .period-box span {
+            color: #00f0ff;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 10px;
+        }
+
+        .prediction-display {
+            background: #04060a;
+            border: 1px solid #00ffcc;
+            border-radius: 6px;
+            padding: 5px;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .prediction-val {
+            font-size: 17px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .status-val {
+            font-size: 9px;
+            font-weight: bold;
+            margin-top: 1px;
+            color: #00f0ff;
+        }
+
+        .color-win { color: #00ffaa !important; }
+        .color-loss { color: #ff0055 !important; }
+
+        .manual-result-bar {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 4px;
+        }
+        .btn-win-mark {
+            flex: 1;
+            background: #064e3b;
+            color: #34d399;
+            border: 1px solid #059669;
+            padding: 2px;
+            font-size: 8px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-loss-mark {
+            flex: 1;
+            background: #7f1d1d;
+            color: #f87171;
+            border: 1px solid #dc2626;
+            padding: 2px;
+            font-size: 8px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+            font-size: 8px;
+            margin-bottom: 4px;
+        }
+
+        .stat-item {
+            background: #080b12;
+            padding: 3px;
+            border-radius: 4px;
+            border: 1px solid #1e293b;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .stat-item span {
+            display: block;
+            color: #00ffcc;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 3px;
+        }
+
+        .btn-tg {
+            flex: 1;
+            background: linear-gradient(90deg, #0088cc, #00aaff);
+            color: #fff;
+            text-decoration: none;
+            padding: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .btn-hide {
+            flex: 1;
+            background: #1e293b;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .show-mini-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #00ffcc;
+            color: #000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 9px;
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.8);
+            cursor: pointer;
+            z-index: 99999;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Game Site -->
+    <iframe class="bg-iframe" src="https://240bdwin24.com/register?inviteCode=3DHL3EN&from=web"></iframe>
+
+    <!-- Password Verification Overlay -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <h3>SERVER 1 ACCESS</h3>
+            <input type="password" id="passInput" placeholder="Password">
+            <button onclick="verifyAccess()">SUBMIT</button>
+        </div>
+    </div>
+
+    <!-- Main Menu Popup Panel -->
+    <div class="overlay" id="mainOverlay">
+        <div class="main-card">
+            <div class="avatar-circle">
+                <div class="avatar-text">AVX<br>OFFICIAL</div>
+            </div>
+
+            <div class="brand-title">AVX OFFICIAL COMMUNITY</div>
+            <div class="system-tag">⚡ প্রিমিয়াম র্যান্ডম হ্যাক ⚡</div>
+
+            <div class="btn-grid">
+                <button class="menu-btn" onclick="requestPassword()">সার্ভার ১</button>
+                <button class="menu-btn purple" onclick="alert('VIP মেম্বার দের জন্য 100% হ্যাকের কাজ চলমান আছে')">সার্ভার ২</button>
+                <button class="menu-btn purple" onclick="window.open('https://t.me/RT_SUPPORT_ADMIN8', '_blank')">ইনবক্স</button>
+                <button class="menu-btn" onclick="window.open('https://t.me/avx_covvvxssw', '_blank')">চ্যানেল</button>
+            </div>
+
+            <div class="footer-tag">✦ Powered by VIP Matrix</div>
+        </div>
+    </div>
+
+    <!-- Compact Mini Predictor Panel (Server 1) -->
+    <div class="widget-container" id="widgetContainer">
+        <div class="wings-bg">
+            <div class="widget-header" id="widgetHeader">
+                <span class="title-text">AVX OFFICIAL COMMUNITY</span>
+                <span class="ping-box">6ms</span>
+            </div>
+
+            <div class="sync-badge">30S VIP RANDOM SYNC</div>
+
+            <div class="period-box">
+                <div>PER: <span id="periodTxt">00000000000000</span></div>
+            </div>
+
+            <div class="prediction-display">
+                <div class="prediction-val" id="predType">BIG</div>
+                <div class="status-val" id="predStatus">WAITING</div>
+            </div>
+
+            <div class="manual-result-bar">
+                <button class="btn-win-mark" onclick="markResult(true)">✓ WIN</button>
+                <button class="btn-loss-mark" onclick="markResult(false)">✕ LOSS</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">ACC: <span>95%</span></div>
+                <div class="stat-item">TIME: <span id="timerTxt">30s</span></div>
+            </div>
+
+            <div class="btn-group">
+                <a href="https://t.me/avx_covvvxssw" target="_blank" class="btn-tg">TELEGRAM</a>
+                <button class="btn-hide" onclick="toggleWidget(false)">HIDE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Show Button -->
+    <div class="show-mini-btn" id="miniBtn" onclick="toggleWidget(true)">
+        SHOW
+    </div>
+
+    <script>
+        // --- তারিখ অনুযায়ী অটো পাসওয়ার্ড সিস্টেম (যেমন: আজ ৯ নভেম্বর হলে 0911) ---
+        function getDailyPassword() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            return day + month;
+        }
+
+        function requestPassword() {
+            document.getElementById("mainOverlay").style.display = "none";
+            document.getElementById("authOverlay").style.display = "flex";
+        }
+
+        function verifyAccess() {
+            const entered = document.getElementById("passInput").value;
+            const correctPassword = getDailyPassword();
+
+            if (entered === correctPassword) {
+                document.getElementById("authOverlay").style.display = "none";
+                document.getElementById("widgetContainer").style.display = "block";
+                document.getElementById("miniBtn").style.display = "none";
+                startSyncTimer();
+            } else {
+                // পাসওয়ার্ড ভুল হলে @RT_SUPPORT_ADMIN8 এ রিডাইরেক্ট হবে
+                window.location.href = "https://t.me/RT_SUPPORT_ADMIN8?text=Password%20nite%20message%20den";
+            }
+        }
+
+        function toggleWidget(show) {
+            document.getElementById("widgetContainer").style.display = show ? "block" : "none";
+            document.getElementById("miniBtn").style.display = show ? "none" : "flex";
+        }
+
+        function getExactWingoPeriod() {
+            const now = new Date();
+            const year = now.getUTCFullYear();
+            const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(now.getUTCDate()).padStart(2, '0');
+            
+            const totalSecondsToday = (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds();
+            const periodIndex = Math.floor(totalSecondsToday / 30) + 1;
+            
+            const periodFormatted = String(periodIndex).padStart(4, '0');
+            return `${year}${month}${day}10005${periodFormatted}`;
+        }
+
+        function markResult(isWin) {
+            const predStatus = document.getElementById("predStatus");
+            if (isWin) {
+                predStatus.innerText = "MAMA KOP (WIN)";
+                predStatus.className = "status-val color-win";
+            } else {
+                predStatus.innerText = "LOSS RECORDED";
+                predStatus.className = "status-val color-loss";
+            }
+        }
+
+        function startSyncTimer() {
+            const timerTxt = document.getElementById("timerTxt");
+            const predType = document.getElementById("predType");
+            const predStatus = document.getElementById("predStatus");
+            const periodTxt = document.getElementById("periodTxt");
+
+            function updatePredictor() {
+                const now = new Date();
+                const seconds = now.getSeconds();
+                const remaining = 30 - (seconds % 30);
+                
+                timerTxt.innerText = remaining + "s";
+                
+                const activePeriod = getExactWingoPeriod();
+                periodTxt.innerText = activePeriod;
+
+                if (activePeriod !== window.lastCheckedPeriod) {
+                    window.lastCheckedPeriod = activePeriod;
+
+                    let pNum = parseInt(activePeriod.slice(-5));
+                    let randomVal = Math.sin(pNum * 73.57) * 10000;
+                    let seed = Math.floor(Math.abs(randomVal)) % 50;
+                    const isBig = seed >= 25;
+
+                    predType.innerText = isBig ? "BIG" : "SMALL";
+                    predType.style.color = isBig ? "#00ffaa" : "#ff0055";
+
+                    predStatus.innerText = "ACTIVE (BET NOW)";
+                    predStatus.className = "status-val";
+                    predStatus.style.color = "#00f0ff";
+                }
+            }
+
+            updatePredictor();
+            setInterval(updatePredictor, 1000);
+        }
+
+        // Draggable Widget Support
+        const widget = document.getElementById("widgetContainer");
+        const header = document.getElementById("widgetHeader");
+
+        let isDragging = false, currentX, currentY, initialX, initialY;
+
+        header.addEventListener("mousedown", dragStart);
+        document.addEventListener("mouseup", dragEnd);
+        document.addEventListener("mousemove", drag);
+
+        header.addEventListener("touchstart", dragStart);
+        document.addEventListener("touchend", dragEnd);
+        document.addEventListener("touchmove", drag);
+
+        function dragStart(e) {
+            initialX = (e.type === "touchstart") ? e.touches[0].clientX - widget.offsetLeft : e.clientX - widget.offsetLeft;
+            initialY = (e.type === "touchstart") ? e.touches[0].clientY - widget.offsetTop : e.clientY - widget.offsetTop;
+            if (e.target === header || header.contains(e.target)) isDragging = true;
+        }
+
+        function dragEnd() { isDragging = false; }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = (e.type === "touchmove") ? e.touches[0].clientX - initialX : e.clientX - initialX;
+                currentY = (e.type === "touchmove") ? e.touches[0].clientY - initialY : e.clientY - initialY;
+                widget.style.left = currentX + "px";
+                widget.style.top = currentY + "px";
+                widget.style.transform = "none";
+            }
+        }
+    </script>
+</body>
+</html>
